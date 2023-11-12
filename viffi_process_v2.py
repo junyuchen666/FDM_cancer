@@ -70,13 +70,13 @@ if __name__ == "__main__":
             # Normalize the image using cv2.convertScaleAbs
             min_val = np.amin(src_ch0)
             max_val = np.amax(src_ch0)
-            src_ch0 = cv2.convertScaleAbs(src_ch0, alpha=255.0 / (maxVal - minVal),
-                                        beta=-minVal * 255.0 / (maxVal - minVal))
+            src_ch0 = cv2.convertScaleAbs(src_ch0, alpha=255.0 / (max_val - min_val),
+                                        beta=-minVal * 255.0 / (max_val - min_val))
 
             min_val = np.amin(src_ch1)
             max_val = np.amax(src_ch1)
-            src_ch1 = cv2.convertScaleAbs(src_ch1, alpha=255.0 / (maxVal - minVal),
-                                        beta=-minVal * 255.0 / (maxVal - minVal))
+            src_ch1 = cv2.convertScaleAbs(src_ch1, alpha=255.0 / (max_val - min_val),
+                                        beta=-minVal * 255.0 / (max_val - min_val))
 
             outpath = output_dir + '/' + item + '_ch1.png'
             if flag == 'RUN':
@@ -127,8 +127,7 @@ if __name__ == "__main__":
             mb = cv2.morphologyEx(thresh_ch1, cv2.MORPH_OPEN, kernel, iterations=2)
             # 3次膨胀操作，是原始图像-确定背景
             sure_bg = cv2.dilate(mb, kernel, iterations=3)
-            # plt.imshow(sure_bg)
-            # plt.show()
+
             # 距离变换函数，用于计算前景对象的中心，获取前景图像（前景子图像相互连接）
             dist = cv2.distanceTransform(mb, cv2.DIST_L2, 3)  # 最后一个值掩膜尺寸，若前面的是DIST_L1或DIST_C时，强制为3
             # 归一化，将图像相同的归为一个类别
@@ -136,10 +135,9 @@ if __name__ == "__main__":
             # *30是为了增加亮度
             min_val = np.amin(dist_output)
             max_val = np.amax(dist_output)
-            dist_output = cv2.convertScaleAbs(dist_output, alpha=255.0 / (maxVal - minVal),
-                                          beta=-minVal * 255.0 / (maxVal - minVal))
+            dist_output = cv2.convertScaleAbs(dist_output, alpha=255.0 / (max_val - min_val),
+                                          beta=-minVal * 255.0 / (max_val - min_val))
 
-            # Plot dist_output
 
             ret, sure_fg = cv2.threshold(dist, dist.max() * 0.6, 255, cv2.THRESH_BINARY)
 
@@ -149,7 +147,7 @@ if __name__ == "__main__":
             unknown = cv2.subtract(sure_bg, surface_fg)
 
             # Concatenate the images
-            img_concat = np.concatenate((dist_output, surface_fg, unknown), axis=1)
+            img_concat = np.concatenate((src_ch1, dist_output, surface_fg, unknown), axis=1)
 
             # Plot the concatenated image
             plt.figure()
