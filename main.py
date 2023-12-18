@@ -43,6 +43,8 @@ for i in range(0, len(file_paths)):
     img_draw = img.copy()
     # img = bm3d.bm3d(img, 10)
     # Convert to uint8
+    std = np.std(img)
+    img = bm3d.bm3d(img, std)
     img = np.clip(img, 0, 255).astype(np.uint8)
     blur = cv2.GaussianBlur(img, (5, 5), 0)
     img_draw = cv2.cvtColor(img_draw, cv2.COLOR_GRAY2RGB)
@@ -54,15 +56,18 @@ for i in range(0, len(file_paths)):
     #     plt.imshow(blur, cmap='gray')
     #     plt.show()
     # Contour detection Canny method
-    edges = cv2.Canny(blur, 100, 200)
+    edges = cv2.Canny(blur, 100, 200, apertureSize=3)
+    # Erode and dilate
+    kernel_size = 5
+    canny_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_size, kernel_size))
+    edges = cv2.dilate(edges, canny_kernel, iterations=2)
+    edges = cv2.erode(edges, canny_kernel, iterations=2)
+
+
     contours, hierarchy = cv2.findContours(edges, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-
-    # _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    # contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
     # Fill the holes
-    contours = [cv2.convexHull(contours[i]) for i in range(len(contours))]
 
+    contours = [cv2.convexHull(contours[i]) for i in range(len(contours))]
     # Remove large contours
     contours = [contours[i] for i in range(len(contours)) if cv2.contourArea(contours[i]) < 2000]
     # print(len(contours))
